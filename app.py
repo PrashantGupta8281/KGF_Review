@@ -99,7 +99,7 @@ col1, col2 = st.columns([1, 2.2])
 with col1:
     try:
         # Looking for the local image file 
-        poster_img = Image.open("kgf2_poster.jpg")
+        poster_img = Image.open("kgf2_poster.png")
         st.image(poster_img, use_container_width=True, caption="K.G.F Chapter 2 - The Legacy Continues")
     except FileNotFoundError:
         # Fallback empty visual element placeholder if file isn't found
