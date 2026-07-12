@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 from transformers import pipeline
@@ -79,7 +80,6 @@ st.markdown("""
 # -----------------------------------------------------------------------------
 @st.cache_resource
 def load_sentiment_pipeline():
-    # Utilizing your chosen DistilBERT Model fine-tuned for SST-2
     return pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english')
 
 @st.cache_resource
@@ -92,18 +92,17 @@ classifier = load_sentiment_pipeline()
 accuracy_metric, f1_metric = load_evaluation_metrics()
 
 # -----------------------------------------------------------------------------
-# 3. APP HEADER & THE MOVIE POSTER HERO BANNER
+# 3. APP HEADER & THE MOVIE POSTER HERO BANNER (UPDATED FOR PNG)
 # -----------------------------------------------------------------------------
 col1, col2 = st.columns([1, 2.2])
 
 with col1:
     try:
-        # Looking for the local image file 
-        poster_img = Image.open("kgf2_poster.jpg")
+        # Changed format from .jpg to .png here
+        poster_img = Image.open("kgf2_poster.png")
         st.image(poster_img, use_container_width=True, caption="K.G.F Chapter 2 - The Legacy Continues")
     except FileNotFoundError:
-        # Fallback empty visual element placeholder if file isn't found
-        st.warning("⚠️ For a fully stunning visual layout, place the K.G.F 2 poster image as 'kgf2_poster.jpg' in the app directory.")
+        st.warning("⚠️ For a fully stunning visual layout, place your K.G.F 2 poster image as 'kgf2_poster.png' in your app directory.")
 
 with col2:
     st.title("🎬 K.G.F 2 Movie Review Analyzer")
@@ -125,14 +124,11 @@ st.write("---")
 # -----------------------------------------------------------------------------
 st.sidebar.header("📁 Operational Controls")
 
-# Optional bulk file uploader mimicking your Pandas loading block
 uploaded_file = st.sidebar.file_uploader("Upload review dataset (.csv)", type=["csv"])
 
-# Instantiating default sample data frame to match notebook context smoothly
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
 else:
-    # Creating a sample mock dataset if no file is uploaded yet
     mock_data = {
         'Review': [
             "KGF 2 is an amazing movie with powerful action and excellent performance.",
@@ -146,7 +142,7 @@ else:
     df = pd.DataFrame(mock_data)
 
 # -----------------------------------------------------------------------------
-# 5. MAIN SYSTEM WORKFLOWS (TAB PANELS ACCORDING TO NLP TASKS)
+# 5. MAIN SYSTEM WORKFLOWS
 # -----------------------------------------------------------------------------
 tab1, tab2 = st.tabs(["🔥 Live Playground Inference", "📊 Dataset Ingestion & Evaluation Metrics"])
 
@@ -154,16 +150,13 @@ with tab1:
     st.write("### 🧪 Real-time Sentiment Classifier Playground")
     st.write("Type or paste any customer review below to test the active *DistilBERT* Transformer instance pipeline.")
     
-    # Custom interactive live input 
     user_review_input = st.text_area("User Review Input:", 
                                      value="KGF 2 is an amazing movie with powerful action and excellent performance.")
     
-    # Run Inference button
     if st.button("🚀 Analyze Single Review Sentiment"):
         with st.spinner("Model inferencing in progress..."):
             prediction_output = classifier(user_review_input)[0]
             
-            # Formulating output design components
             label = prediction_output['label']
             score = prediction_output['score']
             
@@ -177,7 +170,6 @@ with tab2:
     st.write("### 📦 Bulk Dataset Processing & Architecture Evaluation")
     st.write("Below is the actively ingested movie review pipeline matrix data framing structure.")
     
-    # Data View Container
     st.dataframe(df, use_container_width=True)
     
     if st.button("⚙️ Execute Model Pipeline Batch Run"):
@@ -186,24 +178,19 @@ with tab2:
                 reviews_list = df['Review'].tolist()
                 real_labels = df['Class'].tolist()
                 
-                # Perform Pipeline Batch Inference
                 predicted_outputs = classifier(reviews_list)
                 
-                # Constructing structural mapping parameters matching original variables
                 references = [1 if lbl == "POSITIVE" else 0 for lbl in real_labels]
                 predictions = [1 if pred['label'] == "POSITIVE" else 0 for pred in predicted_outputs]
                 
-                # Computing accuracy & f1 parameters safely
                 accuracy_res = accuracy_metric.compute(references=references, predictions=predictions)['accuracy']
                 f1_res = f1_metric.compute(references=references, predictions=predictions)['f1']
                 
-                # Dynamic Metric Cards rendering
                 st.write("#### 🎯 Execution Model Performance Metrics")
                 m_col1, m_col2 = st.columns(2)
                 m_col1.metric(label="📊 Pipeline Accuracy Score", value=f"{accuracy_res * 100:.2f} %")
                 m_col2.metric(label="🧪 F1 Evaluation Score", value=f"{f1_res:.4f}")
                 
-                # Build annotated summary table output
                 results_df = df.copy()
                 results_df['Predicted Sentiment'] = [p['label'] for p in predicted_outputs]
                 results_df['Confidence Confidence'] = [f"{p['score']:.4f}" for p in predicted_outputs]
